@@ -2,16 +2,16 @@
 
 ## Completed
 
-The site is public. It includes 24 separate tool URLs, a homepage, four information pages, descriptive titles, meta descriptions, canonical URLs, crawlable links, visible usage instructions, examples, limitation notes, related tools, valid WebApplication/Breadcrumb structured data, robots.txt and a 29-URL sitemap.
+This export is prepared for the production domain. Public availability requires deployment and domain connection. It includes 24 separate tool URLs, a homepage, four information pages, descriptive titles, meta descriptions, canonical URLs, crawlable links, visible usage instructions, examples, limitation notes, related tools, valid WebApplication/Breadcrumb structured data, robots.txt and a 29-URL sitemap.
 
 The keywords are search-intent phrases chosen to match actual tool functionality, not a claim about verified search volume. No ranking position, indexing decision or advertising approval is guaranteed. There are no fake ratings, keyword-stuffed meta tags or unsupported rich-result claims.
 
 ## Google Search Console
 
 1. Open https://search.google.com/search-console/ using the owner's Google account.
-2. Add a URL-prefix property for https://pdf-tools-studio.yasirhayat5079.chatgpt.site/ .
-3. Choose HTML tag verification and provide the exact google-site-verification meta tag for installation. No verification token is invented in this build.
-4. After verification, submit https://pdf-tools-studio.yasirhayat5079.chatgpt.site/sitemap.xml .
+2. Add a URL-prefix property for https://pdf-tools.drimranhayat.com/ .
+3. Choose HTML tag verification. Set GOOGLE_SITE_VERIFICATION in Cloudflare Pages to the tag’s content value, redeploy and click Verify. The build safely escapes the token and adds the tag to all pages. No token is invented.
+4. After verification, submit https://pdf-tools.drimranhayat.com/sitemap.xml .
 5. Inspect the homepage and priority tool URLs. Request indexing where appropriate and monitor crawl/index reports.
 6. Measure impressions, clicks, queries and conversion behavior before revising page content.
 
@@ -40,7 +40,7 @@ Privacy-focused searches:
 Brand searches:
 
 ```regex
-(?i)pdf[ -]?tools|pdf-tools-studio
+(?i)pdf[ -]?tools|drimranhayat
 ```
 
 The broad brand phrase may include generic tool searches. Refine it once a distinctive brand is chosen.

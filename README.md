@@ -28,9 +28,11 @@ Connect the GitHub repository to a new Pages project and select its main branch.
 | Output directory | `dist` |
 | Root directory | Repository root |
 | Environment variable | `NODE_VERSION=22` |
-| Environment variable | `SITE_URL` = your final HTTPS website origin |
+| Environment variable | `SITE_URL=https://pdf-tools.drimranhayat.com` |
 
-SITE_URL is public configuration. Set it to your real domain or the assigned Cloudflare pages.dev origin, with no subpath. It controls canonical URLs, sitemap entries, robots.txt and structured data. Without it, the build retains the current ChatGPT-hosted origin. Update it before launching on a new domain. Connect your custom domain in Cloudflare after deployment.
+The default production origin is `https://pdf-tools.drimranhayat.com`. It controls canonical URLs, social metadata, sitemap entries, robots.txt and structured data. In Cloudflare Pages, add `pdf-tools.drimranhayat.com` under Custom domains and follow its DNS instructions. Your main website remains separate.
+
+For Google Search Console, add the URL-prefix property `https://pdf-tools.drimranhayat.com/`, choose HTML tag verification and copy only its `content` value into the Cloudflare Pages environment variable `GOOGLE_SITE_VERIFICATION`. Redeploy, then click Verify in Search Console. Submit `https://pdf-tools.drimranhayat.com/sitemap.xml`. No verification tag is emitted until you supply your real token.
 
 ## Local checks
 

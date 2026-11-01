@@ -1428,3 +1428,9 @@ footer>small {
   .seo-guide aside { border-left: 0; border-top: 1px solid #eeeaf6; padding: 15px 0 0; }
   .info-page h1 { font-size: 32px; }
 }
+
+/* Distinct local SVG icons for every tool, including static HTML. */
+.card-icon svg{width:30px;height:32px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tool-card .card-icon{transition:transform .2s ease,box-shadow .2s ease}
+.tool-card:hover .card-icon{transform:translateY(-3px) rotate(-3deg);box-shadow:0 6px 16px color-mix(in srgb,var(--color) 18%,transparent)}
+@media(prefers-reduced-motion:reduce){.tool-card .card-icon{transition:none}.tool-card:hover .card-icon{transform:none}}

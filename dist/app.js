@@ -1,21 +1,7 @@
 import { toolSeo } from './seo-data.js';
 import { advancedTools, buildTextExport } from './advanced.js';
 import { inspectFile, sampleFiles, processTool, readableSize, parsePages } from './engine.js';
-const icons = {
-  merge: '<path d="M5 3h6v7H5zM15 3h6v7h-6zM10 17h6v7h-6zM8 10v3h5v4M18 10v3h-5"/>',
-  split: '<path d="M9 2h8l4 4v10H9zM17 2v5h4M4 11v5h5M4 16v7M2 21l2 2 2-2M18 16v7M16 21l2 2 2-2"/>',
-  compress: '<path d="M6 3h9l4 4v16H6zM15 3v5h5M9 11l4 3 4-3M13 10v4M9 20l4-3 4 3M13 17v4"/>',
-  images: '<rect x="2" y="6" width="15" height="15" rx="2"/><circle cx="7" cy="11" r="1.5"/><path d="m3 18 5-4 4 3 3-2 2 2M19 3h5v16M20 10h4"/>',
-  'to-images': '<path d="M3 2h9l4 4v9H3zM12 2v5h4"/><rect x="10" y="13" width="14" height="11" rx="2"/><path d="m11 21 4-4 4 3 3-2M6 17v5h4"/>',
-  rotate: '<path d="M8 5h9l4 4v14H8zM17 5v5h5M4 14a8 8 0 0 1 4-12M2 5l6-3-1 6"/>',
-  organize: '<rect x="2" y="3" width="8" height="10" rx="1"/><rect x="15" y="3" width="8" height="10" rx="1"/><path d="M3 18h18M6 15l-3 3 3 3M18 15l3 3-3 3"/>',
-  extract: '<path d="M4 4h10v14H4zM10 8h10v15H10M16 3h7M20 0l3 3-3 3"/>',
-  remove: '<path d="M6 3h10l4 4v17H6zM16 3v5h5M10 13l6 6M16 13l-6 6"/>',
-  watermark: '<path d="M6 2h10l4 4v16H6zM16 2v5h5M2 19l18-10M8 19h9"/><path d="m2 13 3 7 3-9 3 6"/>',
-  numbers: '<path d="M6 3h10l4 4v16H6zM16 3v5h5M10 13l3-2v8M10 19h6"/>',
-  text: '<path d="M4 3h13l4 4v15H4zM16 3v5h5M8 12h9M8 16h9M8 20h5"/>',
-};
-const icon = id => `<svg viewBox="0 0 26 27" aria-hidden="true">${icons[id] || icons.text}</svg>`;
+import { icon } from './icons.js';
 const tools = [
   { id: 'merge', name: 'Merge PDF', category: 'organize', color: '#df8c73', tint: '#fcf0ea', description: 'Bring multiple PDFs together. One file, just the way you want it.', popular: true, action: 'Merge PDFs' },
   { id: 'split', name: 'Split PDF', category: 'organize', color: '#ddac66', tint: '#fdf5e7', description: 'A few pages or a whole section. Take only what you need.', action: 'Split PDF' },

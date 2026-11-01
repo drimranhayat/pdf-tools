@@ -1,9 +1,12 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import vm from 'node:vm';
-const parsedUrl = new URL(process.env.SITE_URL || 'https://pdf-tools-studio.yasirhayat5079.chatgpt.site');
+import { icon } from '../dist/icons.js';
+const parsedUrl = new URL(process.env.SITE_URL || 'https://pdf-tools.drimranhayat.com');
 if (parsedUrl.protocol !== 'https:' || parsedUrl.username || parsedUrl.password || parsedUrl.search || parsedUrl.hash || !['', '/'].includes(parsedUrl.pathname)) throw new Error('SITE_URL must be an HTTPS website origin without a path, credentials, query or fragment.');
 const origin = parsedUrl.origin;
+const verification = (process.env.GOOGLE_SITE_VERIFICATION || '').trim();
+const verificationMeta = verification ? `<meta name="google-site-verification" content="${verification.replace(/[&<>\"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]))}">\n` : '';
 const root = path.resolve(import.meta.dirname, '..');
 const dist = path.join(root, 'dist');
 const app = await fs.readFile(path.join(dist, 'app.js'), 'utf8');
@@ -44,9 +47,9 @@ await fs.writeFile(path.join(dist,'seo-data.js'),'export const toolSeo = '+JSON.
 let template=await fs.readFile(path.join(root,'scripts/page-template.html'),'utf8');
 template=template.replace(/(?:src|href)="\.\//g,match=>match.startsWith('src')?'src="/':'href="/');
 template=template.replaceAll('href="#"','href="/"').replaceAll('href="#tools"','href="/#tools"').replaceAll('href="#how-it-works"','href="/#how-it-works"');
-const canonical=(url,title,description,schema)=>`<title>${escape(title)}</title>\n<meta name="description" content="${escape(description)}">\n<link rel="canonical" href="${url}">\n<meta name="robots" content="index,follow,max-image-preview:large">\n<meta property="og:type" content="website">\n<meta property="og:title" content="${escape(title)}">\n<meta property="og:description" content="${escape(description)}">\n<meta property="og:url" content="${url}">\n<meta name="twitter:card" content="summary">\n<script type="application/ld+json">${JSON.stringify(schema).replaceAll('<','\\u003c')}</script>`;
-const head=(html,url,title,description,schema)=>html.replace(/<title>[\s\S]*?<\/title>/,'').replace(/<meta name="description"[^>]*>/,'').replace('</head>',canonical(url,title,description,schema)+'\n</head>');
-const links=Object.values(maps).map(t=>`<a class="tool-card" href="${t.path}" data-tool="${t.id}" style="--color:${t.color};--tint:${t.tint}"><span class="card-icon" aria-hidden="true">PDF</span><span class="card-arrow">↗</span><span class="card-title-row"><h3>${escape(t.name)}</h3></span><p>${escape(t.description)}</p></a>`).join('\n');
+const canonical=(url,title,description,schema)=>`<title>${escape(title)}</title>\n<meta name="description" content="${escape(description)}">\n<link rel="canonical" href="${url}">\n<meta name="robots" content="index,follow,max-image-preview:large">\n<meta property="og:type" content="website">\n<meta property="og:title" content="${escape(title)}">\n<meta property="og:description" content="${escape(description)}">\n<meta property="og:url" content="${url}">\n<meta name="twitter:card" content="summary">\n${verificationMeta}<link rel="icon" type="image/svg+xml" href="/icon.svg">\n<script type="application/ld+json">${JSON.stringify(schema).replaceAll('<','\\u003c')}</script>`;
+const head=(html,url,title,description,schema)=>html.replace(/<title>[\s\S]*?<\/title>/,'').replace(/<meta name="description"[^>]*>/,'').replace(/<meta name="google-site-verification"[^>]*>|<link rel="icon"[^>]*>/g,'').replace('</head>',canonical(url,title,description,schema)+'\n</head>');
+const links=Object.values(maps).map(t=>`<a class="tool-card" href="${t.path}" data-tool="${t.id}" style="--color:${t.color};--tint:${t.tint}"><span class="card-icon" aria-hidden="true">${icon(t.id)}</span><span class="card-arrow">↗</span><span class="card-title-row"><h3>${escape(t.name)}</h3></span><p>${escape(t.description)}</p></a>`).join('\n');
 let home=template.replace('<div class="tool-grid" id="tool-grid"></div>','<div class="tool-grid" id="tool-grid">'+links+'</div>');
 home=home.replace(/<h1>[\s\S]*?<\/h1>/,'<h1>Free online<br><span>PDF tools.</span></h1>');
 const globalFooter='<nav class="legal-links" aria-label="Site information"><a href="/about/">About</a><a href="/privacy/">Privacy policy</a><a href="/terms/">Terms of use</a><a href="/contact/">Contact</a></nav>';

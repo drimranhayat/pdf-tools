@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://pdf-tools-studio.yasirhayat5079.chatgpt.site/sitemap.xml
+Sitemap: https://pdf-tools.drimranhayat.com/sitemap.xml
