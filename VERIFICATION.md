@@ -1,3 +1,7 @@
+# Large PDF limit update — version 1.3
+
+Input, merge-output and duplicate-output limits are now 2,000 pages. File-size and heavy-operation limits remain unchanged. Regression checks include actual 2,000-page PDFs, acceptance at the limit, rejection at 2,001 pages, page-range extraction, whole-document rotation and a 2,000-page merge. These use lightweight generated pages, not a guarantee for image-heavy books or every phone.
+
 # Verification — version 1.2
 
 - npm test: 12 passing test entries, including a file containing 13 real-PDF option scenarios. Coverage includes all 26 setting forms, page presets, paper dimensions, page counts/order, cropping/reset, resize, merge separators, grouping, numbering, metadata, binary formats, Unicode/encoding, CSV safety, text containers and existing Word reconstruction.

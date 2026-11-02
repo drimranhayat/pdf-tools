@@ -1,3 +1,4 @@
+import {validatePdfPages,PDF_OUTPUT_PAGES} from './limits.js';
 import {encodeImage,processPixels,numberIn,paperDimensions,selectedPreset,roman} from './export-formats.js';
 import {exportText} from './text-formats.js';
 import { cleanText, reconstructPage, wordDocument, recognizePages, imageCanvas, pdfCanvas, textDownload } from './word-ocr.js';
@@ -51,11 +52,10 @@ export async function inspectFile(file, imageMode, docxMode = false) {
   }
   try {
     const doc = await window.PDFLib.PDFDocument.load(bytes, { updateMetadata: false });
-    if (!doc.getPageCount()) throw new Error('This PDF has no pages.');
-    if (doc.getPageCount() > 200) throw new Error('Please choose a PDF with 200 pages or fewer.');
+    validatePdfPages(doc.getPageCount());
     return { file, bytes, pages: doc.getPageCount(), metadata: { title: doc.getTitle() || '', author: doc.getAuthor() || '', subject: doc.getSubject() || '', keywords: doc.getKeywords() || '',creator:doc.getCreator()||'',producer:doc.getProducer()||'' } };
   } catch (error) {
-    if (error.message?.includes('200 pages') || error.message?.includes('no pages')) throw error;
+    if (error.code==='PDF_PAGE_LIMIT' || error.message?.includes('no pages')) throw error;
     throw new Error(`${file.name}: unable to open this PDF. It may be encrypted or damaged. Use an unprotected, valid PDF.`);
   }
 }
@@ -169,7 +169,7 @@ async function processToolCore(tool, items, values, progress, signal) {
   };
   if (tool === 'merge') {
     if (items.length < 2) throw new Error('Choose at least two PDFs to merge.');
-    if (items.reduce((total, item) => total + item.pages, 0) > 500) throw new Error('Merge up to 500 pages per operation.');
+    if (items.reduce((total, item) => total + item.pages, 0) > PDF_OUTPUT_PAGES) throw new Error('Merge up to 2,000 pages per operation.');
     const out = await PDFDocument.create();
     if(values.mergeOrder==='name'||values.mergeOrder==='reverse-name')items=[...items].sort((a,b)=>a.file.name.localeCompare(b.file.name,undefined,{numeric:true})*(values.mergeOrder==='reverse-name'?-1:1));
     for (let index = 0; index < items.length; index++) {
@@ -181,7 +181,7 @@ async function processToolCore(tool, items, values, progress, signal) {
       if(values.mergeSeparator==='blank'&&index<items.length-1)out.addPage([source.getPage(0).getWidth(),source.getPage(0).getHeight()]);
     }
     if(!out.getPageCount())throw new Error('No pages matched the merge filter.');
-    if(out.getPageCount()>500)throw new Error('Including blank separators, merge output must stay within 500 pages.');
+    if(out.getPageCount()>PDF_OUTPUT_PAGES)throw new Error('Including blank separators, merge output must stay within 2,000 pages.');
     return result(await savePdf(out), 'merged-document.pdf', `${items.length} documents combined into ${out.getPageCount()} pages.`);
   }
   if (tool === 'images') {
@@ -286,7 +286,7 @@ async function processToolCore(tool, items, values, progress, signal) {
   const total = source.getPageCount();
   if (tool === 'split') {
     let ranges;
-    if(values.splitMode==='every'){const size=numberIn(values.splitEvery,1,200,'Pages per part',2);if(!Number.isInteger(size))throw new Error('Use a whole number of pages per part.');ranges=Array.from({length:Math.ceil(total/size)},(_,n)=>source.getPageIndices().slice(n*size,(n+1)*size));}
+    if(values.splitMode==='every'){const size=numberIn(values.splitEvery,1,2000,'Pages per part',2);if(!Number.isInteger(size))throw new Error('Use a whole number of pages per part.');ranges=Array.from({length:Math.ceil(total/size)},(_,n)=>source.getPageIndices().slice(n*size,(n+1)*size));}
     else if(values.splitMode==='odd-even')ranges=[source.getPageIndices().filter(i=>i%2===0),source.getPageIndices().filter(i=>i%2===1)].filter(a=>a.length);
     else ranges=values.splitMode==='each'?Array.from({length:total},(_,i)=>[i]):(values.ranges||'').split('\n').filter(line=>line.trim()).map(line=>parsePages(line,total));
     if (!ranges.length) throw new Error('Enter one range per line.');

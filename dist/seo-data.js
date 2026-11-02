@@ -14,7 +14,7 @@ export const toolSeo = {
     "steps": "Choose at least two PDFs, use the up and down arrows to arrange the documents, then merge them into a single download.",
     "guide": "Merging is useful for combining a cover sheet, supporting documents and a report. File order matters: pages from each PDF are kept together in the order you select.",
     "example": "Two files containing three and two pages become a single five-page PDF.",
-    "limits": "Merge manually ordered or filename-sorted documents, optionally filtering odd/even pages and adding blank separators. Up to 500 output pages including separators. Forms and signatures may change."
+    "limits": "Merge manually ordered or filename-sorted documents, optionally filtering odd/even pages and adding blank separators. Up to 2,000 output pages including separators. Forms and signatures may change."
   },
   "split": {
     "id": "split",
@@ -383,7 +383,7 @@ export const toolSeo = {
     "steps": "Choose a PDF, select pages and set the number of additional copies to insert immediately after each original.",
     "guide": "Duplication is useful for repeating a form, worksheet or separator inside one PDF. The original page remains, followed by its extra copies.",
     "example": "For a three-page file, duplicating page 2 twice produces five pages in total.",
-    "limits": "Copies can be placed before or after each original or appended at the end. Up to 20 additional copies per selection, with a 500-page output limit."
+    "limits": "Copies can be placed before or after each original or appended at the end. Up to 20 additional copies per selection, with a 2,000-page output limit."
   },
   "image-ocr": {
     "id": "image-ocr",

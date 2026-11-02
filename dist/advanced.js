@@ -1,3 +1,4 @@
+import {PDF_OUTPUT_PAGES} from './limits.js';
 import {paperDimensions,numberIn} from './export-formats.js';
 export const advancedTools = [
   { id:'crop', name:'Crop PDF', category:'edit', color:'#b19aca', tint:'#f6effa', description:'Trim page margins for a cleaner, more focused document.', action:'Crop pages' },
@@ -113,7 +114,7 @@ export async function processAdvanced(tool,items,values,progress,parsePages) {
   if(tool==='duplicate') {
     const copies=Number(values.copies);
     if(!Number.isInteger(copies)||copies<1||copies>20)throw new Error('Choose 1 to 20 additional copies.');
-    if(source.getPageCount()+selected.length*copies>500)throw new Error('Keep the result within 500 pages.');
+    if(source.getPageCount()+selected.length*copies>PDF_OUTPUT_PAGES)throw new Error('Keep the result within 2,000 pages.');
     const out=await PDFDocument.create();
     const append=async i=>{const[p]=await out.copyPages(source,[i]);out.addPage(p);};
     for(const i of source.getPageIndices()){

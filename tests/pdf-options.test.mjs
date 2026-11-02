@@ -4,7 +4,7 @@ const root=fileURLToPath(new URL('..',import.meta.url));
 const sandbox={setTimeout,clearTimeout,setImmediate,clearImmediate,Uint8Array,ArrayBuffer,TextEncoder,TextDecoder,Blob,console,Array,Date,Map,Set};
 vm.createContext(sandbox);vm.runInContext(fs.readFileSync(root+'/dist/vendor/pdf-lib.min.js','utf8'),sandbox);vm.runInContext(fs.readFileSync(root+'/dist/vendor/jszip.min.js','utf8'),sandbox);
 global.window={PDFLib:sandbox.PDFLib,JSZip:sandbox.JSZip};global.DOMMatrix=class{};
-const {processTool}=await import(new URL('../dist/engine.js',import.meta.url));const{PDFDocument,degrees,rgb}=window.PDFLib;
+const {processTool,inspectFile}=await import(new URL('../dist/engine.js',import.meta.url));const{PDFDocument,degrees,rgb}=window.PDFLib;
 async function input(name,count=4){const pdf=await PDFDocument.create();for(let n=0;n<count;n++){const p=pdf.addPage([300+n*10,400]);p.drawRectangle({x:20,y:20,width:100,height:100,color:rgb(1,0,0)});if(n===0)p.setRotation(degrees(90));}const bytes=await pdf.save();return{file:new File([bytes],name,{type:'application/pdf'}),bytes,pages:count};}
 const source=await input('source.pdf');const run=(tool,v={},items=[source])=>processTool(tool,items,v,()=>{});const open=async r=>PDFDocument.load(new Uint8Array(await r.blob.arrayBuffer()));
 let r=await run('rotate',{angle:'0',rotationMode:'absolute',pagePreset:'first',outputName:'renamed.pdf'});assert.equal(r.filename,'renamed.pdf');assert.equal((await open(r)).getPage(0).getRotation().angle,0);
@@ -20,6 +20,16 @@ r=await run('resize',{paper:'custom',paperWidth:'100',paperHeight:'200',orientat
 r=await run('merge',{mergePages:'odd',mergeSeparator:'blank',mergeOrder:'name'},[source,await input('another.pdf',2)]);assert.equal((await open(r)).getPageCount(),4);
 r=await run('numbers',{start:'5',numberTemplate:'page-total',numeralStyle:'roman',numberFont:'Courier',fontSize:'14',position:'top-right',numberMargin:'20',pages:'1-2'});assert.equal((await open(r)).getPageCount(),4);
 r=await run('metadata',{metadataMode:'edit',title:'New title',creator:'Test creator',producer:'Producer',xmpMode:'remove'});assert.equal((await open(r)).getCreator(),'Test creator');
+async function largeInput(count){const pdf=await PDFDocument.create();for(let n=0;n<count;n++)pdf.addPage([595,842]);const bytes=await pdf.save();return{file:new File([bytes],`large-${count}.pdf`,{type:'application/pdf'}),bytes,pages:count};}
+const large=await largeInput(2000);
+assert.equal((await inspectFile(large.file,false)).pages,2000);
+const over=await largeInput(2001);
+await assert.rejects(()=>inspectFile(over.file,false),error=>error.code==='PDF_PAGE_LIMIT'&&error.message.includes('2,000'));
+r=await run('extract',{pages:'1901-2000'},[large]);assert.equal((await open(r)).getPageCount(),100);
+r=await run('rotate',{angle:'90',rotationMode:'relative'},[large]);assert.equal((await open(r)).getPage(1999).getRotation().angle,90);
+r=await run('merge',{},[await largeInput(1001),await largeInput(999)]);assert.equal((await open(r)).getPageCount(),2000);
+await assert.rejects(()=>run('duplicate',{copies:'1',pages:'1'},[large]),/2,000/);
+console.log('Passed large-PDF boundaries: 2,000-page acceptance, 2,001 rejection, range extraction, rotation, merge, duplicate cap.');
 console.log('Passed 13 PDF option scenarios: real PDF page counts, order, boxes, sizes, metadata, numbering and ZIP entries.');
 
 }catch(error){console.error(error.message);process.exitCode=1;}
