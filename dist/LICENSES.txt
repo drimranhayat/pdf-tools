@@ -857,3 +857,5 @@ Program, unless a warranty or assumption of liability accompanies a
 copy of the Program in return for a fee.
 
                      END OF TERMS AND CONDITIONS
+
+OCR additions: Tesseract.js 6.0.1 and Tesseract.js-core 6.0.0 (Apache-2.0); fast eng, urd and ara language data from naptha/tessdata 4.0.0_fast. Full notices and bundled dependency notices are in vendor/ocr/v1/. Asset hashes: ../scripts/ocr-assets.json in the repository.

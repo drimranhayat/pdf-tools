@@ -1,6 +1,6 @@
 # PDF Tools — GitHub repository
 
-A complete static website with 24 PDF tools and 29 crawlable pages. All browser dependencies and prebuilt files are included. No processing server or dependency installation is needed for the build.
+A complete static website with 26 PDF tools and 31 crawlable pages. All browser dependencies and prebuilt files are included. No processing server or dependency installation is needed for the build. OCR code, WASM cores and English, Urdu and Arabic language models are bundled and loaded from your own site only when OCR is used.
 
 ## Create your repository on Windows
 
@@ -49,10 +49,10 @@ The build is dependency-free; browser libraries are vendored in dist/vendor. Loc
 
 The website includes merge, split, compression, images to PDF, PDF to images, rotation, organization, extraction, page removal, watermarks, numbering, text extraction, cropping, resizing, grayscale, text overlays, drawn signatures, form flattening, metadata, basic Word text conversion, HTML, Markdown and duplication.
 
-Word conversions are text-only. Image-based compression and grayscale remove selectable text and interactive features on rebuilt pages. Cropping is not redaction, drawn signatures are not digital certificates, and metadata clearing is not a complete privacy scrub. Preserve originals and inspect outputs.
+Word to PDF is text-only. PDF to Word now supports paragraph reconstruction, approximate line formatting and image-based appearance preservation. Image-based compression and grayscale remove selectable text and interactive features on rebuilt pages. Cropping is not redaction, drawn signatures are not digital certificates, and metadata clearing is not a complete privacy scrub. Preserve originals and inspect outputs.
 
 No advertising, analytics, payments or accounts are integrated. Search Console needs the owner's verification code. AdSense needs the owner's account-issued publisher code, approval, updated privacy disclosures and any required consent controls. Rankings and income are not guaranteed.
 
-See SEO_LAUNCH.md, VERIFICATION.md and dist/LICENSES.txt. The original application source has no open-source license granted by this export; keep the repo private unless you choose an appropriate license and public distribution.
+See OPTIONS_GUIDE.md for the complete 26-tool option review, OCR_AND_WORD.md for conversion notes, SCALING.md for traffic readiness, SEO_LAUNCH.md for indexing, VERIFICATION.md for checks and dist/LICENSES.txt for dependencies. Run npm test, python scripts/audit-seo.py and python scripts/audit-assets.py before redeploying. The original application source has no open-source license granted by this export; keep the repo private unless you choose an appropriate license and public distribution.
 
 This export excludes existing Git history, Sites identity, credentials and .openai hosting configuration. It does not create a repository in your GitHub account automatically.

@@ -14,7 +14,7 @@ export const toolSeo = {
     "steps": "Choose at least two PDFs, use the up and down arrows to arrange the documents, then merge them into a single download.",
     "guide": "Merging is useful for combining a cover sheet, supporting documents and a report. File order matters: pages from each PDF are kept together in the order you select.",
     "example": "Two files containing three and two pages become a single five-page PDF.",
-    "limits": "Merge supports up to 20 files, 100 MB total and 500 combined pages. Interactive forms and signatures may not survive page copying."
+    "limits": "Merge manually ordered or filename-sorted documents, optionally filtering odd/even pages and adding blank separators. Up to 500 output pages including separators. Forms and signatures may change."
   },
   "split": {
     "id": "split",
@@ -30,7 +30,7 @@ export const toolSeo = {
     "steps": "Choose a PDF, select one file per page or enter custom ranges on separate lines, then download the result.",
     "guide": "Splitting helps separate chapters, invoices or application documents. Unlike extraction, a split operation can create several output PDFs at once.",
     "example": "Enter 1-3 on the first line and 4-6 on the next to create two three-page documents.",
-    "limits": "Use up to 200 source pages and 100 output PDFs per operation. More than one output is delivered as a ZIP."
+    "limits": "Choose individual pages, custom ranges, groups of N pages, or odd/even groups. Up to 100 output PDFs; multiple parts are packaged in a ZIP."
   },
   "compress": {
     "id": "compress",
@@ -63,7 +63,7 @@ export const toolSeo = {
     "steps": "Add your images, arrange their order, choose page size and margins, then convert the images into a PDF.",
     "guide": "This works for photos of documents, screenshots and illustrations. Each image becomes its own page. Choose A4 for printing or fit-to-image for fewer empty margins.",
     "example": "Combine a front and back document photo into a two-page PDF, with a small margin on each page.",
-    "limits": "Transparent areas become white. Images are capped at 4,000 pixels on the long edge. This does not perform OCR or perspective correction."
+    "limits": "One decoded frame per image becomes a PDF page. GIF uses one frame; AVIF and ICO decoding depend on your browser. Image resolution is capped at 4,000 px on the long edge. Fill mode may crop and stretch mode may distort. Background color fills transparent areas."
   },
   "to-images": {
     "id": "to-images",
@@ -71,15 +71,15 @@ export const toolSeo = {
     "category": "convert",
     "color": "#a293d2",
     "tint": "#f2edfc",
-    "description": "Convert PDF pages to JPG or PNG images in your browser. Select pages and resolution; multiple images download together as a ZIP.",
+    "description": "Convert PDF pages to JPG, PNG, WebP, TIFF, BMP, GIF, SVG image wrappers, ICO or PPM. Choose quality, page ranges and resolution in your browser.",
     "action": "Convert to images",
     "path": "/pdf-to-jpg/",
-    "title": "PDF to JPG Online — Convert PDF to JPG or PNG",
-    "keyword": "PDF to JPG online",
-    "steps": "Choose your PDF, select JPG or PNG, choose a resolution and optionally enter a page range, then convert.",
-    "guide": "JPG is useful for compact previews. PNG avoids additional JPEG compression and can be preferable for diagrams or text-heavy pages, although the files can be larger.",
-    "example": "Enter 2, 5 to save only the second and fifth pages. Two images are delivered in one ZIP file.",
-    "limits": "This renders complete pages; it does not extract original embedded images. Up to 50 selected pages can be rendered per operation."
+    "title": "PDF to Images Online — JPG, PNG, WebP, TIFF & More",
+    "keyword": "convert PDF to images",
+    "steps": "Choose a PDF, output format and render resolution. Select a page range or odd/even pages. Advanced options offer quality, color, rotation, background, size cap and ZIP packaging.",
+    "guide": "JPG and WebP offer adjustable compression. PNG is lossless. BMP, TIFF and PPM are uncompressed. GIF uses 256 colors. SVG wraps a PNG page image rather than recreating vector objects. ICO creates a small thumbnail. AVIF appears only if the browser can encode it.",
+    "example": "Save pages 2 and 5 as PNG, or choose TIFF for uncompressed page images. Use zero-padded page names for an ordered ZIP archive.",
+    "limits": "Pages are rendered, not original image extraction. DPI and long-edge settings are targets capped to 12 megapixels. GIF is a single-frame 256-color image; SVG embeds PNG; ICO is a thumbnail. TIFF, BMP and PPM are uncompressed. Transparency applies to PNG, WebP and SVG only. An operation is limited to 50 selected pages and 180 MB output."
   },
   "rotate": {
     "id": "rotate",
@@ -95,7 +95,7 @@ export const toolSeo = {
     "steps": "Choose a PDF, select the clockwise rotation and specify pages if needed, then save the rotated document.",
     "guide": "The selected angle is added to each page’s existing rotation. Leave the page range empty to rotate every page. Page order does not change.",
     "example": "If only page 3 is sideways, enter 3 and choose 90 degrees instead of rotating the entire document.",
-    "limits": "Review pages with existing rotation or crop boxes. Editing may invalidate existing document signatures."
+    "limits": "Relative mode adds to existing rotation. Absolute mode sets the chosen orientation, including a 0° reset. Page selection supports custom, odd/even, first or last."
   },
   "organize": {
     "id": "organize",
@@ -111,7 +111,7 @@ export const toolSeo = {
     "steps": "Choose a PDF and enter page numbers in the order you want to keep them, then create the reordered document.",
     "guide": "Organizing is useful when scanned pages are out of order. Pages not included in the order are omitted, so include every page if you only want to change the sequence.",
     "example": "For a three-page PDF, enter 3, 1, 2 to move the last page to the beginning.",
-    "limits": "Duplicate page numbers are rejected. Use Duplicate PDF Pages when you want to repeat pages."
+    "limits": "Use a custom order, reverse the document or group odd/even pages. Custom order omits pages not listed and rejects duplicates."
   },
   "extract": {
     "id": "extract",
@@ -175,7 +175,7 @@ export const toolSeo = {
     "steps": "Choose the source PDF, set the starting number, position and font size, then add numbers to your chosen pages.",
     "guide": "Numbering is useful for packets assembled from several sources. Numbers are overlaid on existing pages; the tool does not move content to create space.",
     "example": "Start at 1 and choose bottom center for a simple continuous page sequence.",
-    "limits": "Existing page numbers are not removed. Check the output so new numbers do not overlap footnotes or other content."
+    "limits": "Number selected pages with decimal or Roman numerals, templates, font, color and placement. {total} is the last number in this numbered sequence. Custom templates use ASCII text. Roman values are limited to 1–3999."
   },
   "text": {
     "id": "text",
@@ -183,15 +183,15 @@ export const toolSeo = {
     "category": "convert",
     "color": "#c5a073",
     "tint": "#faf3e9",
-    "description": "Extract selectable PDF text into a TXT file. Choose pages and download the text locally. Scanned image-only PDFs require OCR.",
+    "description": "Extract selectable PDF text into TXT, DOCX, RTF, ODT, HTML, Markdown, JSON or CSV. Choose pages, cleanup and text encoding locally.",
     "action": "Extract text",
     "path": "/pdf-to-text/",
-    "title": "PDF to Text Online — Extract Selectable Text",
-    "keyword": "PDF to text converter",
-    "steps": "Choose a PDF with selectable text, select pages if needed, and download a plain text file.",
-    "guide": "Text extraction is useful for searching, copying and quoting document content. Reading order depends on how the PDF stores text, especially with columns and tables.",
-    "example": "Extract pages 2-4 into a TXT file with page separators for easier review.",
-    "limits": "This does not recognize text in scans. Tables, graphics and original page formatting are not preserved."
+    "title": "PDF to Text Online — TXT, DOCX, RTF, ODT & More",
+    "keyword": "extract PDF text",
+    "steps": "Choose a text-based PDF, select pages and an output format, then set cleanup and any text encoding options before exporting.",
+    "guide": "Page presets cover odd, even, first and last pages. Text outputs do not recreate original tables, illustrations or layout. TXT, CSV and Markdown support UTF-8 or UTF-16 and Windows or Unix line endings.",
+    "example": "Save page text as JSON for further processing or as DOCX for editing.",
+    "limits": "Text-only export in eight formats. Scans need the separate OCR tool. CSV escapes potential spreadsheet formulas by prefixing an apostrophe. Original images, tables and layout are not retained."
   },
   "crop": {
     "id": "crop",
@@ -207,7 +207,7 @@ export const toolSeo = {
     "steps": "Choose a PDF, enter the amount to trim from each edge in millimeters and apply it to the required pages.",
     "guide": "Cropping changes the visible page box. Use it to reduce unnecessary white space, but keep your original and inspect pages with existing crop boxes.",
     "example": "Trim 10 mm from the left and right edges while leaving the top and bottom unchanged.",
-    "limits": "Cropped content remains in the file and may be recoverable. Never use this as secure redaction."
+    "limits": "Choose trim units in mm, points or inches, or restore the media-box view. Hidden content remains recoverable; this is not redaction. Very large margins are rejected."
   },
   "resize": {
     "id": "resize",
@@ -223,7 +223,7 @@ export const toolSeo = {
     "steps": "Choose a PDF, select the paper size, orientation and margins, then fit the selected pages to the new size.",
     "guide": "Page resizing is useful when a document must be printed on standard paper. Content is scaled proportionally rather than stretched to fill the page.",
     "example": "Fit a mixed-size document to A4 portrait with a small margin for printing.",
-    "limits": "Form controls, links and page-rotation behavior may change. Review the output before using it for important submissions."
+    "limits": "Choose standard or custom paper, orientation, margins and fit behavior. Fill can crop content; stretch can distort. Forms, links and rotation behavior may change."
   },
   "grayscale": {
     "id": "grayscale",
@@ -271,7 +271,7 @@ export const toolSeo = {
     "steps": "Choose a PDF, draw in the signature box, set placement and width, then save a copy with the signature image.",
     "guide": "A drawn signature can be useful for a document that accepts a visual signature. Check the recipient’s requirements before relying on it for formal acceptance.",
     "example": "Place a signature near the bottom of the last page by selecting that page and adjusting the top position.",
-    "limits": "This does not verify identity, issue a digital certificate or provide a collaborative signing audit trail."
+    "limits": "Draw a signature or type a visual signature name. Typed output uses device cursive fonts. Color and stroke changes affect new drawing strokes. This is not certificate-based signing or identity verification."
   },
   "flatten": {
     "id": "flatten",
@@ -311,15 +311,15 @@ export const toolSeo = {
     "category": "convert",
     "color": "#83a1c1",
     "tint": "#edf3fb",
-    "description": "Convert selectable PDF text into an editable DOCX document. Basic text export runs locally; original layout, images and tables are not preserved.",
+    "description": "Convert PDF to Word with paragraph cleanup, approximate font sizes and alignment, or preserve page appearance as images. Private browser processing.",
     "action": "Convert to Word",
     "path": "/pdf-to-word/",
-    "title": "PDF to Word Online — Convert PDF Text to DOCX",
-    "keyword": "PDF to Word text converter",
-    "steps": "Choose a PDF containing selectable text, select pages if needed, then export an editable Word document.",
-    "guide": "This converter is for moving existing text into a basic DOCX file. It does not recreate the source layout, fonts, tables or illustrations. Scans need a separate OCR service.",
-    "example": "Export a text-based report to Word so you can rewrite its paragraphs in a new document.",
-    "limits": "This is text-only conversion, not full-fidelity PDF-to-Word reconstruction. Reading order can vary with complex page layouts."
+    "title": "PDF to Word Online — Improved Formatting & Editable Text",
+    "keyword": "convert PDF to Word",
+    "steps": "Choose a PDF and select clean editable paragraphs, editable line formatting, or preserved appearance. Optionally select pages, then download the Word document.",
+    "guide": "Clean mode reconstructs paragraphs from text positions. Line mode keeps approximate font sizes, emphasis and alignment with tab-separated gaps. Appearance mode embeds rendered page images for visual fidelity; its text is not editable.",
+    "example": "Convert a text-based report in clean mode for editing. Choose appearance mode for a complex page whose visual arrangement matters more than editable text.",
+    "limits": "DOCX supports editable paragraphs, approximate line formatting, or page images. RTF, ODT and TXT are text-only exports and require an editable mode. Font, spacing and page-boundary controls apply to editable DOCX. Complex layouts can differ."
   },
   "from-word": {
     "id": "from-word",
@@ -351,7 +351,7 @@ export const toolSeo = {
     "steps": "Choose a text-based PDF, optionally select pages and download a basic HTML document.",
     "guide": "The export uses escaped text and page sections. It can be a useful starting point for editing content in a webpage, rather than a replica of the source design.",
     "example": "Convert several pages of selectable text into HTML sections that can be edited in a text editor.",
-    "limits": "Images, tables and original layout are not retained. Scanned PDFs require OCR before text can be extracted."
+    "limits": "HTML is escaped and text only. You can choose other text output formats, page headings, and cleanup. Encoding and line-ending controls affect TXT, CSV and Markdown only."
   },
   "to-markdown": {
     "id": "to-markdown",
@@ -367,7 +367,7 @@ export const toolSeo = {
     "steps": "Choose a PDF containing selectable text and export the chosen pages to a Markdown file.",
     "guide": "Markdown is a plain-text format suited to notes and documentation. This tool adds page headings and exports existing text without reconstructing complex structure.",
     "example": "Move the text of a short document into an MD file for editing in your notes application.",
-    "limits": "Scans are not recognized, and tables, images and reading order may need manual cleanup."
+    "limits": "Markdown escapes text markup; it does not reconstruct source tables. Other text outputs are available. Encoding and line-ending controls affect TXT, CSV and Markdown only."
   },
   "duplicate": {
     "id": "duplicate",
@@ -383,6 +383,38 @@ export const toolSeo = {
     "steps": "Choose a PDF, select pages and set the number of additional copies to insert immediately after each original.",
     "guide": "Duplication is useful for repeating a form, worksheet or separator inside one PDF. The original page remains, followed by its extra copies.",
     "example": "For a three-page file, duplicating page 2 twice produces five pages in total.",
-    "limits": "Use 1 to 10 additional copies per selected page and keep the total output within 500 pages."
+    "limits": "Copies can be placed before or after each original or appended at the end. Up to 20 additional copies per selection, with a 500-page output limit."
+  },
+  "image-ocr": {
+    "id": "image-ocr",
+    "name": "Image to Text — OCR",
+    "category": "convert",
+    "color": "#7caaa6",
+    "tint": "#ecf5f3",
+    "description": "Extract English, Urdu or Arabic text from JPG, PNG and WebP images locally. Review OCR text and save as TXT or Word without uploading documents.",
+    "action": "Recognize text",
+    "path": "/image-to-text/",
+    "title": "Image to Text OCR Online — English, Urdu & Arabic",
+    "keyword": "extract text from an image",
+    "steps": "Choose up to 10 upright images, select the text language and layout, then recognize text. Review the editable preview, correct errors and save text or Word.",
+    "guide": "OCR is useful for turning a clear printed page into editable text. The engine and language files load from this website, and recognition runs on your device. Use the closest language option and rotate sideways images before recognition.",
+    "example": "Recognize a photograph of a printed English page, correct names in the preview and save the edited DOCX.",
+    "limits": "Up to 10 images. Choose bundled English, Urdu and Arabic models or combinations, recognition layout and image preparation. Review all text; Nastaleeq, handwriting and scans can be inaccurate. Text outputs do not preserve page layout."
+  },
+  "pdf-ocr": {
+    "id": "pdf-ocr",
+    "name": "Scanned PDF to Text",
+    "category": "convert",
+    "color": "#b19aca",
+    "tint": "#f6effa",
+    "description": "Recognize English, Urdu and Arabic text in scanned PDF pages locally. Select up to 10 pages, edit recognized text and download TXT or DOCX.",
+    "action": "Recognize scanned text",
+    "path": "/scanned-pdf-to-text/",
+    "title": "Scanned PDF to Text OCR — Private Browser Processing",
+    "keyword": "convert scanned PDF to text",
+    "steps": "Choose a scanned PDF, enter up to 10 pages, select language and rotation, then recognize text. Correct the preview and download the edited result.",
+    "guide": "Scanned PDFs contain page images instead of selectable text. OCR recognizes those images one page at a time. Use PDF to Word for text-based documents when you want editable font and paragraph reconstruction.",
+    "example": "Recognize pages 1-3 of a scanned report and download the corrected text as a Word document.",
+    "limits": "Up to 10 selected PDF pages. DPI is capped for device memory. Choose language combinations and review recognized text before saving. Output is text, not a searchable PDF or a faithful document layout."
   }
 };

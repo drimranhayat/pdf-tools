@@ -2,7 +2,7 @@
 
 ## Completed
 
-This export is prepared for the production domain. Public availability requires deployment and domain connection. It includes 24 separate tool URLs, a homepage, four information pages, descriptive titles, meta descriptions, canonical URLs, crawlable links, visible usage instructions, examples, limitation notes, related tools, valid WebApplication/Breadcrumb structured data, robots.txt and a 29-URL sitemap.
+This export is prepared for the production domain. Public availability requires deployment and domain connection. It includes 26 separate tool URLs, a homepage, four information pages, descriptive titles, meta descriptions, canonical URLs, crawlable links, visible usage instructions, examples, limitation notes, related tools, valid WebApplication/Breadcrumb structured data, robots.txt and a 31-URL sitemap.
 
 The keywords are search-intent phrases chosen to match actual tool functionality, not a claim about verified search volume. No ranking position, indexing decision or advertising approval is guaranteed. There are no fake ratings, keyword-stuffed meta tags or unsupported rich-result claims.
 

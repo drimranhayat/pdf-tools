@@ -1,13 +1,25 @@
+import { expandedOptions, expandedNotes } from './tool-settings.js';
+import { cleanText, textDownload } from './word-ocr.js';
 import { toolSeo } from './seo-data.js';
 import { advancedTools, buildTextExport } from './advanced.js';
-import { inspectFile, sampleFiles, processTool, readableSize, parsePages } from './engine.js';
+// Load large document libraries only when a visitor adds or processes a file.
+const readableSize = bytes => bytes >= 1048576 ? `${(bytes / 1048576).toFixed(2)} MB` : `${(bytes / 1024).toFixed(1)} KB`;
+let enginePromise;
+function loadLibrary(src,globalName){
+  if(window[globalName])return Promise.resolve();
+  return new Promise((resolve,reject)=>{const script=document.createElement('script');script.src=src;script.onload=resolve;script.onerror=()=>{script.remove();reject(new Error('Document tools could not load. Check your connection and retry.'));};document.head.append(script);});
+}
+function loadEngine(){
+  if(!enginePromise)enginePromise=Promise.all([loadLibrary('/vendor/pdf-lib.min.js','PDFLib'),loadLibrary('/vendor/jszip.min.js','JSZip'),import('./engine.js')]).then(parts=>parts[2]).catch(error=>{enginePromise=null;throw error;});
+  return enginePromise;
+}
 import { icon } from './icons.js';
 const tools = [
   { id: 'merge', name: 'Merge PDF', category: 'organize', color: '#df8c73', tint: '#fcf0ea', description: 'Bring multiple PDFs together. One file, just the way you want it.', popular: true, action: 'Merge PDFs' },
   { id: 'split', name: 'Split PDF', category: 'organize', color: '#ddac66', tint: '#fdf5e7', description: 'A few pages or a whole section. Take only what you need.', action: 'Split PDF' },
   { id: 'compress', name: 'Compress PDF', category: 'optimize', color: '#85aa8b', tint: '#edf5ee', description: 'Make image-heavy PDFs lighter and easier to share.', popular: true, action: 'Compress PDF' },
   { id: 'images', name: 'Images to PDF', category: 'convert', color: '#83a1c1', tint: '#edf3fb', description: 'Turn JPG, PNG, and WebP images into one tidy PDF.', action: 'Convert to PDF' },
-  { id: 'to-images', name: 'PDF to Images', category: 'convert', color: '#a293d2', tint: '#f2edfc', description: 'Save your PDF pages as crisp JPG or PNG images.', action: 'Convert to images' },
+  { id: 'to-images', name: 'PDF to Images', category: 'convert', color: '#a293d2', tint: '#f2edfc', description: 'Export PDF pages in popular image formats with flexible quality settings.', action: 'Convert to images' },
   { id: 'rotate', name: 'Rotate PDF', category: 'edit', color: '#df9b83', tint: '#fbf0eb', description: 'Sideways pages? Get everything facing the right way.', action: 'Rotate pages' },
   { id: 'organize', name: 'Organize PDF', category: 'organize', color: '#7caaa6', tint: '#ecf5f3', description: 'Reorder your pages and create a better document flow.', action: 'Organize pages' },
   { id: 'extract', name: 'Extract Pages', category: 'organize', color: '#a6b27d', tint: '#f2f5e9', description: 'Give selected pages a PDF of their very own.', action: 'Extract pages' },
@@ -20,11 +32,13 @@ tools.push(...advancedTools);
 document.querySelector('[data-filter="all"] span').textContent = String(tools.length);
 const $ = selector => document.querySelector(selector);
 const escapeHtml = value => String(value).replace(/[&<>"']/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[char]));
-const state = { filter: 'all', search: '', tool: null, files: [], busy: false, result: null, resultUrl: null };
+const state = { filter: 'all', search: '', tool: null, files: [], busy: false, result: null, resultUrl: null, controller: null };
 function renderGrid() {
-  const visible = tools.filter(tool => (state.filter === 'all' || tool.category === state.filter) && `${tool.name} ${tool.description}`.toLowerCase().includes(state.search.toLowerCase()));
+  const visible = tools.filter(tool => (state.filter === 'all' || (state.filter === 'ocr' ? tool.id.endsWith('-ocr') : tool.category === state.filter)) && `${tool.name} ${tool.description}`.toLowerCase().includes(state.search.toLowerCase()));
   $('#tool-grid').innerHTML = visible.map(tool => `<a class="tool-card" href="${toolSeo[tool.id].path}" data-tool="${tool.id}" style="--color:${tool.color};--tint:${tool.tint}"><span class="card-icon">${icon(tool.id)}</span>${tool.popular ? '<span class="popular">POPULAR</span>' : ''}<span class="card-arrow">↗</span><span class="card-title-row"><h3>${tool.name}</h3></span><p>${tool.description}</p></a>`).join('');
   $('#no-results').hidden = visible.length > 0;
+  $('#tool-count').textContent = `${visible.length} ${visible.length===1?'tool':'tools'}${state.search ? ' matching your search' : ' · Free to use · No account needed'}`;
+  $('.filters').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.filter===state.filter)));
 }
 const field = (label, name, input, help = '') => `<div class="field"><label for="${name}">${label}</label>${input}${help ? `<small>${help}</small>` : ''}</div>`;
 const textField = (label, name, value = '', help = '', extra = '') => field(label, name, `<input id="${name}" name="${name}" value="${value}" ${extra}>`, help);
@@ -57,7 +71,9 @@ function renderOptions() {
   if (id === 'extract' || id === 'remove') html = pagesField(true);
   if (id === 'watermark') html = textField('Watermark text', 'watermark', 'CONFIDENTIAL', 'Up to 100 characters. Arabic and other scripts use your device fonts.', 'maxlength="100"') + selectField('Direction', 'direction', [['diagonal','Diagonal'],['horizontal','Horizontal']]) + selectField('Opacity', 'opacity', [['0.25','25% · Subtle'],['0.5','50% · Visible'],['0.75','75% · Strong']]) + field('Text color', 'color', '<input type="color" id="color" name="color" value="#786a9a">') + pagesField();
   if (id === 'numbers') html = textField('Start numbering at', 'start', '1', '', 'type="number" min="1" max="100000"') + selectField('Position', 'position', [['center','Bottom center'],['left','Bottom left'],['right','Bottom right'],['top-center','Top center'],['top-left','Top left'],['top-right','Top right']]) + selectField('Font size','fontSize',[['11','11 pt'],['9','9 pt'],['14','14 pt'],['18','18 pt']]) + pagesField();
-  if (['text','to-word','to-html','to-markdown'].includes(id)) html = pagesField();
+  if (['text','to-html','to-markdown'].includes(id)) html = pagesField();
+  if(id==='to-word') html=selectField('Word export mode','wordMode',[['clean','Clean editable paragraphs'],['layout','Editable · keep lines and font hints'],['appearance','Preserve appearance · page images, not editable']])+pagesField();
+  if(['image-ocr','pdf-ocr'].includes(id)) html=selectField('Text language','language',[['eng','English'],['urd','Urdu'],['ara','Arabic'],['eng+urd','English + Urdu'],['eng+ara','English + Arabic']])+selectField('Page layout','segmentation',[['auto','Automatic layout'],['block','Single text block']])+selectField('Rotate input clockwise','ocrRotation',[['0','No rotation'],['90','90°'],['180','180°'],['270','270°']])+selectField('Text cleanup','cleanup',[['paragraphs','Join wrapped lines into paragraphs'],['lines','Keep recognized line breaks']])+selectField('Save as','output',[['txt','Plain text (.txt)'],['docx','Word document (.docx)']])+(id==='pdf-ocr'?pagesField():'');
   if (id === 'from-word') html = '<p class="empty-option">Choose a DOCX file. Its text becomes a simple, reflowed PDF with a clean white page.</p>';
   if (id === 'grayscale') html = selectField('Resolution','dpi',[['120','120 DPI · Balanced'],['72','72 DPI · Compact'],['144','144 DPI · Detailed']]) + pagesField();
   if (id === 'crop') html = ['left','right','top','bottom'].map(side => textField(side[0].toUpperCase()+side.slice(1)+' margin (mm)',side,'10','', 'type="number" min="0" max="254" step="1"')).join('') + pagesField();
@@ -77,17 +93,37 @@ function renderOptions() {
     signature:'A hand-drawn visual signature, not a certificate-based digital signature or identity verification. Review placement before sharing.',
     flatten:'Flattening uses the current field appearance. It does not preserve interactive fields or existing signatures. Check the filled values in the result.',
     metadata:'Clears or edits common document properties and optional XMP metadata. It is not a complete privacy scrub or secure redaction. Dates are reset to the Unix epoch when clearing.',
-    'to-word':'Basic text-only DOCX export. Original formatting, layout, tables, images and scanned text are not converted. No OCR.',
+    'to-word':'Clean mode joins text into paragraphs. Line mode keeps approximate fonts, alignment and spacing; complex columns and tables may differ. Appearance mode embeds page images, so text is not editable. Up to 100 editable pages or 20 image pages. For scanned editable text, use Scanned PDF to Text.',
+    'image-ocr':'Up to 10 images. OCR runs on your device; engine and language files load from this website on demand. Choose the correct language and upright orientation. Nastaleeq and handwriting may be inaccurate. Review the editable preview.',
+    'pdf-ocr':'Up to 10 selected pages per run. Recognition can take time on phones. Choose the correct language and rotation, then review the text. Output is editable text, not a searchable PDF or an exact layout copy.',
     'from-word':'Basic DOCX text conversion. Original fonts, layout, tables, graphics and selectable text are not retained. Legacy DOC and image-only DOCX files are unsupported.',
     'to-html':'Basic text-only HTML export. Text is escaped for safety. Original layout, images and tables are not retained.',
     'to-markdown':'Exports existing text with page headings. This does not reconstruct tables or document structure. No OCR.',
     duplicate:'Selected pages are repeated in place, directly after each original. Up to 10 additional copies, with a maximum of 500 output pages.'
   };
-  Object.assign(notes, extraNotes);
-  $('#tool-options').innerHTML = html;
+  Object.assign(notes, extraNotes, expandedNotes);
+  $('#tool-options').innerHTML = expandedOptions(id,{field,textField,selectField,pagesField},html);
   $('#operation-note').textContent = notes[id];
   $('#process').innerHTML = `${state.tool.action} <span>→</span>`;
   if (id === 'signature') setupSignature();
+  syncOptionVisibility();
+}
+function syncOptionVisibility(){
+  const value=id=>document.getElementById(id)?.value;
+  const show=(id,visible)=>{const field=document.getElementById(id)?.closest('.field');if(field)field.hidden=!visible;};
+  if(value('pagePreset'))show('pages',value('pagePreset')==='custom');
+  if(value('paper')){show('paperWidth',value('paper')==='custom');show('paperHeight',value('paper')==='custom');show('imageDpi',value('paper')==='fit');}
+  if(value('splitMode')){show('ranges',value('splitMode')==='ranges');show('splitEvery',value('splitMode')==='every');}
+  if(value('orderMode'))show('order',value('orderMode')==='custom');
+  if(value('dpi'))show('customDpi',value('dpi')==='custom');
+  if(value('compression')){show('customDpi',value('compression')==='custom');show('quality',value('compression')==='custom');}
+  if(value('backgroundMode'))show('background',value('backgroundMode')==='color');
+  if(value('numberTemplate'))show('numberCustom',value('numberTemplate')==='custom');
+  if(value('direction'))show('watermarkAngle',value('direction')==='custom');
+  show('ocrDpi',state.tool?.id==='pdf-ocr');
+  if(value('characterMode'))show('whitelist',value('characterMode')==='custom');
+  if(value('signatureMode')){show('signatureName',value('signatureMode')==='typed');show('signature-canvas',value('signatureMode')==='draw');show('strokeWidth',value('signatureMode')==='draw');}
+  if(value('wordFormat')){const docx=value('wordFormat')==='docx';show('wordMode',docx);for(const id of ['wordFont','wordSize','wordSpacing','wordBreaks'])show(id,docx&&value('wordMode')!=='appearance');show('wordDpi',docx&&value('wordMode')==='appearance');}
 }
 function clearResult() {
   if (state.resultUrl) URL.revokeObjectURL(state.resultUrl);
@@ -107,13 +143,13 @@ function showTool(id) {
   clearResult(); message('');
   $('#home').hidden = true; $('#workspace').hidden = false;
   $('#workspace-title').innerHTML = `<span class="work-icon" style="--color:${tool.color};--tint:${tool.tint}">${icon(id)}</span><h1>${tool.name}</h1><p>${tool.description}</p>`;
-  const imageMode = id === 'images';
+  const imageMode = ['images','image-ocr'].includes(id);
   const docxMode = id === 'from-word';
-  $('#file-input').accept = docxMode ? '.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document' : imageMode ? 'image/jpeg,image/png,image/webp' : '.pdf,application/pdf';
+  $('#file-input').accept = docxMode ? '.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document' : imageMode ? 'image/jpeg,image/png,image/webp,image/bmp,image/gif,image/avif,image/x-icon' : '.pdf,application/pdf';
   $('#file-input').multiple = id === 'merge' || imageMode;
   $('#drop-title').textContent = docxMode ? 'Choose a DOCX document' : imageMode ? 'Choose your images' : id === 'merge' ? 'Choose PDF files' : 'Choose a PDF file';
   $('#drop-description').textContent = 'or drag and drop them here';
-  $('#file-hint').textContent = `${docxMode ? 'DOCX files · Text conversion' : imageMode ? 'JPG, PNG & WebP' : 'PDF files'} · Up to 50 MB each · ${id === 'merge' || imageMode ? '20 files, 100 MB total' : docxMode ? 'One DOCX file' : 'One PDF, up to 200 pages'}`;
+  $('#file-hint').textContent = `${docxMode ? 'DOCX files · Text conversion' : imageMode ? 'JPG, PNG, WebP, BMP, GIF, AVIF & ICO (browser support varies)' : 'PDF files'} · Up to 50 MB each · ${id === 'image-ocr' ? '10 images, 100 MB total' : id === 'merge' || imageMode ? '20 files, 100 MB total' : docxMode ? 'One DOCX file' : 'One PDF, up to 200 pages'}`;
   $('#drop-icon').innerHTML = icon(id);
   renderOptions(); renderFiles();
   document.title = toolSeo[id].title + ' | PDF Tools';
@@ -123,7 +159,7 @@ function showHome() {
   if (state.busy) return;
   clearResult(); state.files = []; state.tool = null;
   $('#home').hidden = false; $('#workspace').hidden = true;
-  document.title = 'PDF Tools — 24 Free Tools to Merge, Split & Convert PDF';
+  document.title = 'PDF Tools — 26 Free Tools to Merge, Split & Convert PDF';
 }
 function navigate(id = '') { if (state.busy) return; location.assign(id ? toolSeo[id].path : '/'); }
 function route() {
@@ -135,13 +171,13 @@ function route() {
 function renderFiles() {
   $('#file-count').textContent = String(state.files.length);
   $('#drop-area').hidden = state.files.length > 0;
-  $('#files-list').innerHTML = state.files.map((item, index) => `<div class="file-row"><span class="file-symbol">${state.tool.id === 'images' ? 'IMG' : state.tool.id === 'from-word' ? 'DOCX' : 'PDF'}</span><span class="file-info"><strong title="${escapeHtml(item.file.name)}">${escapeHtml(item.file.name)}</strong><small>${readableSize(item.file.size)} · ${state.tool.id === 'from-word' ? `${item.text.length.toLocaleString()} text characters` : state.tool.id === 'images' ? `${item.width} × ${item.height} px` : `${item.pages} ${item.pages === 1 ? 'page' : 'pages'}`}</small></span><span class="file-actions">${state.files.length > 1 ? `<button data-move="${index}" data-direction="-1" aria-label="Move file ${index + 1} up" ${index === 0 ? 'disabled' : ''}>↑</button><button data-move="${index}" data-direction="1" aria-label="Move file ${index + 1} down" ${index === state.files.length - 1 ? 'disabled' : ''}>↓</button>` : ''}<button data-remove="${index}" aria-label="Remove file ${index + 1}">×</button></span></div>`).join('');
+  $('#files-list').innerHTML = state.files.map((item, index) => `<div class="file-row"><span class="file-symbol">${['images','image-ocr'].includes(state.tool.id) ? 'IMG' : state.tool.id === 'from-word' ? 'DOCX' : 'PDF'}</span><span class="file-info"><strong title="${escapeHtml(item.file.name)}">${escapeHtml(item.file.name)}</strong><small>${readableSize(item.file.size)} · ${state.tool.id === 'from-word' ? `${item.text.length.toLocaleString()} text characters` : ['images','image-ocr'].includes(state.tool.id) ? `${item.width} × ${item.height} px` : `${item.pages} ${item.pages === 1 ? 'page' : 'pages'}`}</small></span><span class="file-actions">${state.files.length > 1 ? `<button data-move="${index}" data-direction="-1" aria-label="Move file ${index + 1} up" ${index === 0 ? 'disabled' : ''}>↑</button><button data-move="${index}" data-direction="1" aria-label="Move file ${index + 1} down" ${index === state.files.length - 1 ? 'disabled' : ''}>↓</button>` : ''}<button data-remove="${index}" aria-label="Remove file ${index + 1}">×</button></span></div>`).join('');
   $('#clear-files').hidden = !state.files.length;
-  $('#add-files').hidden = !state.files.length || !['merge','images'].includes(state.tool.id) || state.files.length >= 20;
+  $('#add-files').hidden = !state.files.length || !['merge','images','image-ocr'].includes(state.tool.id) || state.files.length >= (state.tool.id==='image-ocr'?10:20);
   $('#process').disabled = !state.files.length || (state.tool.id === 'merge' && state.files.length < 2);
   $('.sample-row').hidden = state.files.length > 0;
   const total = state.files[0]?.pages || 0;
-  $('#page-preview').innerHTML = !['images','from-word'].includes(state.tool.id) && total ? `<p class="preview-caption">Document overview · ${total} pages</p>${Array.from({length:Math.min(12,total)},(_,i)=>`<span class="page-tile">${icon('text')}<span>Page ${i+1}</span></span>`).join('')}${total > 12 ? `<span class="page-tile">+${total-12}<span>more</span></span>` : ''}` : '';
+  $('#page-preview').innerHTML = !['images','image-ocr','from-word'].includes(state.tool.id) && total ? `<p class="preview-caption">Document overview · ${total} ${total===1?'page':'pages'}</p>${Array.from({length:Math.min(12,total)},(_,i)=>`<span class="page-tile">${icon('text')}<span>Page ${i+1}</span></span>`).join('')}${total > 12 ? `<span class="page-tile">+${total-12}<span>more</span></span>` : ''}` : '';
 }
 function setBusy(busy) {
   state.busy = busy;
@@ -154,39 +190,56 @@ async function addFiles(files) {
   clearResult(); message(''); setBusy(true);
   const errors = [];
   try {
-    const multiple = ['merge', 'images'].includes(state.tool.id);
-    const room = multiple ? 20 - state.files.length : 1;
+    const multiple = ['merge', 'images','image-ocr'].includes(state.tool.id);
+    const maxFiles=state.tool.id==='image-ocr'?10:20;
+    const room = multiple ? maxFiles - state.files.length : 1;
     if (!multiple && state.files.length) throw new Error('Remove the current file before choosing a replacement.');
     let total = state.files.reduce((n, item) => n + item.file.size, 0);
     for (const file of files.slice(0, room)) {
       if (total + file.size > 100 * 1048576) { errors.push('Use up to 100 MB of files in one operation.'); continue; }
       try {
-        const item = await inspectFile(file, state.tool.id === 'images', state.tool.id === 'from-word');
+        const {inspectFile}=await loadEngine();
+        const item = await inspectFile(file, ['images','image-ocr'].includes(state.tool.id), state.tool.id === 'from-word');
         state.files.push(item); total += file.size;
         if (state.tool.id === 'metadata' && item.metadata) for (const [key,value] of Object.entries(item.metadata)) { const field = document.getElementById(key); if (field) field.value = value; }
       } catch (error) { errors.push(error.message); }
     }
-    if (files.length > room) errors.push(`This tool accepts ${multiple ? 'up to 20 files' : 'one PDF at a time'}.`);
+    if (files.length > room) errors.push(`This tool accepts ${multiple ? `up to ${maxFiles} files` : 'one document at a time'}.`);
   } catch (error) { errors.push(error.message); }
   finally { setBusy(false); message(errors.join(' '), errors.length > 0); }
 }
 async function process() {
   if (state.busy || !state.files.length) return;
   clearResult(); message('');
+  const invalid=Array.from($('#tool-options').querySelectorAll('input,select,textarea')).find(control=>!control.closest('[hidden]')&&!control.checkValidity());
+  if(invalid){invalid.closest('details')?.setAttribute('open','');invalid.reportValidity();return;}
   const values = Object.fromEntries([...$('#tool-options').querySelectorAll('[name]')].map(field => [field.name, field.value]));
   if (state.tool.id === 'numbers' && (!Number.isInteger(Number(values.start)) || Number(values.start) < 1 || Number(values.start) > 100000)) { message('Start numbering with a whole number between 1 and 100,000.', true); return; }
   if (['add-text','signature'].includes(state.tool.id) && ['x','y','width'].some(key => !Number.isFinite(Number(values[key])) || Number(values[key]) < (key === 'width' ? 10 : 0) || Number(values[key]) > (key === 'width' ? 100 : 90))) { message('Use positions from 0 to 90% and a width from 10 to 100%.', true); return; }
+  state.controller = new AbortController();
   setBusy(true);
+  if(['image-ocr','pdf-ocr'].includes(state.tool.id)){const cancel=document.createElement('button');cancel.id='cancel-ocr';cancel.className='secondary';cancel.textContent='Cancel OCR';cancel.addEventListener('click',()=>state.controller?.abort());$('#work-message').after(cancel);}
   $('#process').innerHTML = '<span class="progress-inline"></span> Working on your files…';
   try {
-    const result = await processTool(state.tool.id, state.files, values, text => message(text));
+    const {processTool}=await loadEngine();
+    const result = await processTool(state.tool.id, state.files, values, text => message(text), state.controller.signal);
     state.result = result; state.resultUrl = URL.createObjectURL(result.blob);
-    $('#result').innerHTML = `<span class="result-check">✓</span><div><h2>All done. That was simple.</h2><p>${escapeHtml(result.detail)}</p><div class="result-meta">${escapeHtml(result.filename)} · ${readableSize(result.blob.size)}</div></div><a class="primary" href="${state.resultUrl}" download="${escapeHtml(result.filename)}">Download ${result.filename.endsWith('.zip') ? 'ZIP' : result.filename.endsWith('.txt') ? 'text' : result.filename.endsWith('.docx') ? 'Word document' : result.filename.endsWith('.html') ? 'HTML' : result.filename.endsWith('.md') ? 'Markdown' : result.filename.endsWith('.pdf') ? 'PDF' : 'image'} <span>↓</span></a>`;
+    $('#result').innerHTML = `<span class="result-check">✓</span><div><h2>Your download is ready.</h2><p>${escapeHtml(result.detail)}</p><div class="result-meta">${escapeHtml(result.filename)} · ${readableSize(result.blob.size)}</div></div><a class="primary" href="${state.resultUrl}" download="${escapeHtml(result.filename)}">Download ${result.filename.endsWith('.zip') ? 'ZIP' : result.filename.endsWith('.txt') ? 'text' : result.filename.endsWith('.docx') ? 'Word document' : result.filename.endsWith('.html') ? 'HTML' : result.filename.endsWith('.md') ? 'Markdown' : result.filename.endsWith('.pdf')?'PDF':['rtf','odt','json','csv'].includes(result.filename.split('.').pop())?result.filename.split('.').pop().toUpperCase():'image'} <span>↓</span></a>`;
+    if(typeof result.previewText==='string') renderTextPreview(result);
     $('#result').hidden = false;
     message('Your file is ready. Download it before leaving this tool.');
     $('#result').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   } catch (error) { message(error.message || 'Something went wrong. Try a smaller or different file.', true); }
-  finally { setBusy(false); $('#process').innerHTML = `${state.tool.action} <span>→</span>`; }
+  finally { $('#cancel-ocr')?.remove(); state.controller=null; setBusy(false); $('#process').innerHTML = `${state.tool.action} <span>→</span>`; }
+}
+function renderTextPreview(result){
+  const panel=document.createElement('section');panel.className='text-preview';
+  panel.innerHTML=`<h3>Review and edit your text</h3><p>${escapeHtml(result.previewNote||'Check recognized text before saving.')}</p>${result.confidences?`<p class="confidence-note">${escapeHtml(result.confidences.join(' · '))}</p>`:''}<label for="recognized-text">Editable text</label><textarea id="recognized-text" dir="auto" spellcheck="true"></textarea><div class="preview-actions"><button class="secondary" id="copy-text">Copy text</button><button class="secondary" id="cleanup-text">Join wrapped lines</button><button class="primary" id="save-edits">Save edited ${result.format?.toUpperCase()||'text'}</button></div><p id="preview-status" role="status"></p>`;
+  $('#result').append(panel);const area=panel.querySelector('textarea');area.value=result.previewText;
+  const status=panel.querySelector('#preview-status');
+  panel.querySelector('#copy-text').onclick=async()=>{try{await navigator.clipboard.writeText(area.value);status.textContent='Text copied.';}catch{area.focus();area.select();status.textContent='Press Ctrl+C or use your device’s Copy command.';}};
+  panel.querySelector('#cleanup-text').onclick=()=>{area.value=cleanText(area.value);status.textContent='Wrapped lines joined. Review paragraph boundaries.';};
+  panel.querySelector('#save-edits').onclick=async()=>{try{const blob=await textDownload(area.value,result.format);const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=result.filename.replace(/(\.[^.]+)$/,'-edited$1');document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);status.textContent='Edited download created. The original download above is unchanged.';}catch{status.textContent='Unable to create the download. Copy the text and retry.';}};
 }
 function setupSignature() {
   const canvas = $('#signature-canvas');
@@ -194,14 +247,14 @@ function setupSignature() {
   ctx.strokeStyle = '#252b43'; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
   let drawing = false;
   const point = event => { const rect = canvas.getBoundingClientRect(); return [(event.clientX-rect.left)*canvas.width/rect.width,(event.clientY-rect.top)*canvas.height/rect.height]; };
-  canvas.addEventListener('pointerdown',event=>{ if(state.busy)return; drawing=true;canvas.setPointerCapture(event.pointerId);const [x,y]=point(event);ctx.beginPath();ctx.moveTo(x,y);event.preventDefault(); });
+  canvas.addEventListener('pointerdown',event=>{ if(state.busy)return; drawing=true;canvas.setPointerCapture(event.pointerId);const [x,y]=point(event);ctx.strokeStyle=$('#color')?.value||'#252b43';ctx.lineWidth=Number($('#strokeWidth')?.value)||4;ctx.beginPath();ctx.moveTo(x,y);event.preventDefault(); });
   canvas.addEventListener('pointermove',event=>{if(!drawing)return;const [x,y]=point(event);ctx.lineTo(x,y);ctx.stroke();canvas.dataset.signed='true';clearResult();});
   canvas.addEventListener('pointerup',()=>{drawing=false;});
   canvas.addEventListener('pointercancel',()=>{drawing=false;});
   $('#clear-signature').addEventListener('click',()=>{ctx.clearRect(0,0,canvas.width,canvas.height);delete canvas.dataset.signed;clearResult();});
 }
 function dialog(kind) {
-  const content = kind === 'privacy' ? `<h2>Your files stay yours.</h2><p>These PDF tools process documents in your browser. Selected documents and generated outputs are not uploaded to a processing server, and the app has no document database, accounts, advertising SDKs, or analytics.</p><p>Files remain in working memory while you use a tool. Switching tools, clearing files, or closing the page releases the app's references. Files you download remain wherever you save them.</p><p>The hosting service receives normal website requests and connection information. Browser and operating-system behavior is outside the app's control. If you choose a cloud provider in a device file picker, that provider handles any transfer under its own terms.</p><h3>A note about sensitive documents</h3><p>Editing a PDF can invalidate signatures or change interactive features. Keep your original. A watermark is not secure redaction or encryption.</p>` : `<h2>Useful tools. Honest limits.</h2><p>PDF Tools is an independent, browser-based document toolkit. It is not affiliated with iLovePDF or other PDF services.</p><ul><li>24 working tools. No account or document upload required.</li><li>Up to 50 MB per file and 100 MB total. PDF inputs support up to 200 pages each.</li><li>Merge up to 500 pages. Image-based conversion and compression support up to 50 selected pages.</li><li>Image-based compression removes selectable text, links, forms, and digital signatures. It can make some PDFs larger.</li><li>Text extraction reads existing text; it does not perform OCR.</li><li>Password protection/removal, Full-fidelity Office document conversion, secure redaction, OCR, and collaborative signing are not included.</li><li>Performance depends on your device. Keep originals and review the output before relying on it.</li></ul>`;
+  const content = kind === 'privacy' ? `<h2>Your files stay yours.</h2><p>These PDF tools process documents in your browser. Selected documents and generated outputs are not uploaded to a processing server, and the app has no document database, accounts, advertising SDKs, or analytics.</p><p>OCR engine and language files are downloaded from this same website on demand. OCR is local; no recognition API receives your document. Files remain in working memory while you use a tool. Switching tools, clearing files, or closing the page releases the app's references. Files you download remain wherever you save them.</p><p>The hosting service receives normal website requests and connection information. Browser and operating-system behavior is outside the app's control. If you choose a cloud provider in a device file picker, that provider handles any transfer under its own terms.</p><h3>A note about sensitive documents</h3><p>Editing a PDF can invalidate signatures or change interactive features. Keep your original. A watermark is not secure redaction or encryption.</p>` : `<h2>Useful tools. Honest limits.</h2><p>PDF Tools is an independent, browser-based document toolkit. It is not affiliated with iLovePDF or other PDF services.</p><ul><li>26 working tools. No account or document upload required.</li><li>Up to 50 MB per file and 100 MB total. PDF inputs support up to 200 pages each.</li><li>Merge up to 500 pages. Image-based conversion and compression support up to 50 selected pages.</li><li>Image-based compression removes selectable text, links, forms, and digital signatures. It can make some PDFs larger.</li><li>PDF to Text reads existing text. The separate OCR tools recognize English, Urdu and Arabic from images and scans. Review recognition errors.</li><li>Password protection/removal, Exact editable Office layout reconstruction, secure redaction and collaborative signing are not included.</li><li>Performance depends on your device. Keep originals and review the output before relying on it.</li></ul>`;
   $('#dialog-content').innerHTML = content;
   $('#info-dialog').showModal();
 }
@@ -236,13 +289,15 @@ $('#use-sample').addEventListener('click', async () => {
   if (state.busy) return;
   setBusy(true);
   try {
+    const {sampleFiles}=await loadEngine();
     const files = state.tool.id === 'from-word'
       ? [new File([(await buildTextExport([{page:1,text:'A simple Word document.\nThis text becomes a clean PDF.'}], 'to-word','sample')).blob], 'sample-document.docx', {type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'})]
-      : await sampleFiles(state.tool.id === 'images');
+      : await sampleFiles(['images','image-ocr'].includes(state.tool.id));
     setBusy(false);
-    await addFiles(state.tool.id === 'merge' || state.tool.id === 'images' ? files : files.slice(0,1));
+    await addFiles(state.tool.id === 'merge' || ['images','image-ocr'].includes(state.tool.id) ? files : files.slice(0,1));
   } catch (error) { setBusy(false); message(error.message, true); }
 });
+$('#tool-options').addEventListener('change',event=>{syncOptionVisibility();const target=event.target;if(target.value==='custom'){const dependent=({dpi:'customDpi',compression:'customDpi',paper:'paperWidth',direction:'watermarkAngle',characterMode:'whitelist',numberTemplate:'numberCustom'})[target.id];if(dependent)document.getElementById(dependent)?.closest('details')?.setAttribute('open','');}});
 $('#tool-options').addEventListener('input', () => { clearResult(); message(''); });
 $('#process').addEventListener('click', process);
 document.querySelectorAll('[data-dialog]').forEach(button => button.addEventListener('click', () => dialog(button.dataset.dialog)));

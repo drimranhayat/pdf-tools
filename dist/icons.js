@@ -1,4 +1,6 @@
 export const icons = {
+  'image-ocr':'<rect x="2" y="3" width="22" height="21" rx="2"/><path d="M6 10V7h4M16 7h4v3M6 17v3h4M20 17v3h-4M9 12h8M13 12v5"/>',
+  'pdf-ocr':'<path d="M5 2h11l5 5v6M16 2v6h5M3 15v-3h4M20 12h4v3M3 21v3h4M24 21v3h-4M8 16h11M13 16v6"/>',
   merge: '<path d="M5 3h6v7H5zM15 3h6v7h-6zM10 17h6v7h-6zM8 10v3h5v4M18 10v3h-5"/>',
   split: '<path d="M9 2h8l4 4v10H9zM17 2v5h4M4 11v5h5M4 16v7M2 21l2 2 2-2M18 16v7M16 21l2 2 2-2"/>',
   compress: '<path d="M6 3h9l4 4v16H6zM15 3v5h5M9 11l4 3 4-3M13 10v4M9 20l4-3 4 3M13 17v4"/>',

@@ -34,7 +34,7 @@ class HeadAudit(HTMLParser):
         if tag == 'script': self.in_schema = False
 
 pages = [ROOT / 'index.html', *ROOT.glob('*/index.html')]
-assert len(pages) == 29, len(pages)
+assert len(pages) == 31, len(pages)
 canonical_urls = set()
 for page in pages:
     content = page.read_text()
@@ -55,4 +55,4 @@ entries = ET.parse(ROOT / 'sitemap.xml').getroot()
 sitemap_urls = {entry[0].text for entry in entries}
 assert sitemap_urls == canonical_urls
 assert 'Disallow: /' not in (ROOT / 'robots.txt').read_text()
-print('Passed: 29 pages, unique canonical URLs, descriptions, titles, structured data, local assets, slug regex, sitemap coverage, and no tool fragment links.')
+print('Passed: 31 pages, unique canonical URLs, descriptions, titles, structured data, local assets, slug regex, sitemap coverage, and no tool fragment links.')
