@@ -1,3 +1,7 @@
+# Image export limit update — version 1.3.1
+
+PDF to Images now accepts 100 selected pages per run. The 180 MB accumulated output budget and per-page resolution caps remain unchanged. Compression and grayscale remain at 50 pages; OCR remains at 10. Boundary tests verify 100 acceptance and 101 rejection for image export and preserve the other tools’ limits.
+
 # Large PDF limit update — version 1.3
 
 Input, merge-output and duplicate-output limits are now 2,000 pages. File-size and heavy-operation limits remain unchanged. Regression checks include actual 2,000-page PDFs, acceptance at the limit, rejection at 2,001 pages, page-range extraction, whole-document rotation and a 2,000-page merge. These use lightweight generated pages, not a guarantee for image-heavy books or every phone.

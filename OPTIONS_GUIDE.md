@@ -41,7 +41,7 @@ Text and OCR exports: TXT, DOCX, RTF, ODT, HTML, Markdown, JSON and CSV. These p
 
 ## Limits retained
 
-Up to 50 MB per input, 100 MB total, and 2,000 pages per source PDF. Merge and duplicate outputs stay within 2,000 pages. Splitting produces at most 100 PDFs. Render tools allow up to 50 selected pages, a 12-megapixel cap and a 180 MB accumulated output cap. OCR allows 10 images or selected pages, one worker at a time. Word appearance mode allows 20 pages; editable Word modes allow 100. Roman numbers must stay within 1–3999. Custom numbering templates use ASCII. These caps protect the visitor’s device; they do not guarantee every device has enough memory.
+Up to 50 MB per input, 100 MB total, and 2,000 pages per source PDF. Merge and duplicate outputs stay within 2,000 pages. Splitting produces at most 100 PDFs. PDF to Images allows 100 selected pages; compression and grayscale allow 50 selected pages, a 12-megapixel cap and a 180 MB accumulated output cap. OCR allows 10 images or selected pages, one worker at a time. Word appearance mode allows 20 pages; editable Word modes allow 100. Roman numbers must stay within 1–3999. Custom numbering templates use ASCII. These caps protect the visitor’s device; they do not guarantee every device has enough memory.
 
 Cropping, metadata editing, text overlays and watermarks are not secure redaction. Drawn or typed signatures are visual, not certificate-based digital signatures. Image-based compression, grayscale and Word-to-PDF can remove selectable text or interactive features. Preserve originals and inspect outputs.
 
@@ -51,4 +51,4 @@ Replace the repository files, including the new export-formats.js, text-formats.
 
 ## Large PDF update
 
-PDF inputs now accept up to 2,000 pages, subject to the existing 50 MB per-file limit. Merge and duplicate outputs also allow 2,000 pages. Split by groups of up to 2,000 pages; the maximum remains 100 output PDF parts per run. Large inputs can be opened in image/OCR tools, but only the selected processing range is allowed: 50 rendered pages, 10 OCR pages, 20 Word page-image pages or 100 editable Word pages per run. These are separate limits. For large books, select a small range, save it, then repeat. A desktop browser is preferable; page count alone does not predict memory use.
+PDF inputs now accept up to 2,000 pages, subject to the existing 50 MB per-file limit. Merge and duplicate outputs also allow 2,000 pages. Split by groups of up to 2,000 pages; the maximum remains 100 output PDF parts per run. Large inputs can be opened in image/OCR tools, but only the selected processing range is allowed: 100 image-export pages (50 for compression/grayscale), 10 OCR pages, 20 Word page-image pages or 100 editable Word pages per run. These are separate limits. For large books, select a small range, save it, then repeat. A desktop browser is preferable; page count alone does not predict memory use.

@@ -79,7 +79,7 @@ export const toolSeo = {
     "steps": "Choose a PDF, output format and render resolution. Select a page range or odd/even pages. Advanced options offer quality, color, rotation, background, size cap and ZIP packaging.",
     "guide": "JPG and WebP offer adjustable compression. PNG is lossless. BMP, TIFF and PPM are uncompressed. GIF uses 256 colors. SVG wraps a PNG page image rather than recreating vector objects. ICO creates a small thumbnail. AVIF appears only if the browser can encode it.",
     "example": "Save pages 2 and 5 as PNG, or choose TIFF for uncompressed page images. Use zero-padded page names for an ordered ZIP archive.",
-    "limits": "Pages are rendered, not original image extraction. DPI and long-edge settings are targets capped to 12 megapixels. GIF is a single-frame 256-color image; SVG embeds PNG; ICO is a thumbnail. TIFF, BMP and PPM are uncompressed. Transparency applies to PNG, WebP and SVG only. An operation is limited to 50 selected pages and 180 MB output."
+    "limits": "Pages are rendered, not original image extraction. DPI and long-edge settings are targets capped to 12 megapixels. GIF is a single-frame 256-color image; SVG embeds PNG; ICO is a thumbnail. TIFF, BMP and PPM are uncompressed. Transparency applies to PNG, WebP and SVG only. An operation is limited to 100 selected pages and 180 MB output."
   },
   "rotate": {
     "id": "rotate",

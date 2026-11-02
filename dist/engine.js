@@ -1,4 +1,4 @@
-import {validatePdfPages,PDF_OUTPUT_PAGES} from './limits.js';
+import {validatePdfPages,PDF_OUTPUT_PAGES,validateRasterPages} from './limits.js';
 import {encodeImage,processPixels,numberIn,paperDimensions,selectedPreset,roman} from './export-formats.js';
 import {exportText} from './text-formats.js';
 import { cleanText, reconstructPage, wordDocument, recognizePages, imageCanvas, pdfCanvas, textDownload } from './word-ocr.js';
@@ -215,7 +215,7 @@ async function processToolCore(tool, items, values, progress, signal) {
     try {
       const selected = parsePages(values.pages || '', document.numPages, true);
       const textMode = ['text', 'to-word', 'to-html', 'to-markdown'].includes(tool);
-      if (!textMode && selected.length > 50) throw new Error('Image-based tools support up to 50 selected pages per operation. Enter a smaller page range.');
+      if(!textMode)validateRasterPages(tool,selected.length);
       if (textMode) {
         const chunks = [];
         const textPages = [];

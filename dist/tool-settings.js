@@ -38,7 +38,7 @@ export function expandedOptions(id,{field,textField,selectField,pagesField},exis
 }
 
 export const expandedNotes={
- 'to-images':'Pages are rendered, not original image extraction. DPI and long-edge settings are targets capped to 12 megapixels. GIF is a single-frame 256-color image; SVG embeds PNG; ICO is a thumbnail. TIFF, BMP and PPM are uncompressed. Transparency applies to PNG, WebP and SVG only. An operation is limited to 50 selected pages and 180 MB output.',
+ 'to-images':'Pages are rendered, not original image extraction. DPI and long-edge settings are targets capped to 12 megapixels. GIF is a single-frame 256-color image; SVG embeds PNG; ICO is a thumbnail. TIFF, BMP and PPM are uncompressed. Transparency applies to PNG, WebP and SVG only. An operation is limited to 100 selected pages and 180 MB output.',
  images:'One decoded frame per image becomes a PDF page. GIF uses one frame; AVIF and ICO decoding depend on your browser. Image resolution is capped at 4,000 px on the long edge. Fill mode may crop and stretch mode may distort. Background color fills transparent areas.',
  split:'Choose individual pages, custom ranges, groups of N pages, or odd/even groups. Up to 100 output PDFs; multiple parts are packaged in a ZIP.',
  merge:'Merge manually ordered or filename-sorted documents, optionally filtering odd/even pages and adding blank separators. Up to 2,000 output pages including separators. Forms and signatures may change.',
